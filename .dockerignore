@@ -1,0 +1,29 @@
+# Virtual environment
+venv/
+.env/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Logs
+logs/
+*.log
+
+# MLflow files
+mlflow.db
+mlruns/
+
+# Local notebooks
+notebook/
+
+# Artifacts not needed inside container
+artifacts/
+
+# Git files
+.git/
+.gitignore
+Jenkinsfile
+
+# OS files
+*.DS_Store
