@@ -1,6 +1,7 @@
 venv/
 testing.py
-artifacts/
 __pycache__/
 logs/
 mlruns/
+MLProject.egg-info/
+mlflow.db
