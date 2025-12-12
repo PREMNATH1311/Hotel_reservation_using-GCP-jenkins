@@ -3,6 +3,8 @@ pipeline{
 
     environment{
         VENV_DIR='venv'
+        GCP_PROJECT="annular-beacon-480011-m2"
+        GCLOUD_PATH="/var/jenkins_home/google-cloud-sdk/bin"
     }
 
     stages{
@@ -25,6 +27,23 @@ pipeline{
                     pip install --upgrade pip
                     pip install -e .
                     '''
+                }
+            }
+        }
+        stage('Bulding and pushing docker image to GCR'){
+            steps{
+                withcredentials([file(credentialsId:'gcp-key',variable:'GOOGLE_APPLICATION_CREDENTIALS')]){
+                    script{
+                        echo'Bulding and pushing docker image to GCR..........'
+                        sh '''
+                        export PATH=$PATH:$(GCLOUD_PATH)
+                        gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
+                        gcloud config set project ${GCP_PROJECT}
+                        gcloud auth configure-docker --quiet
+                        docker build -t gcr.io/${GCP_PROJECT}/ml-project:latest .
+                        docker push gcr.io/${GCP_PROJECT}/ml-project:latest
+                        '''
+                    }
                 }
             }
         }
