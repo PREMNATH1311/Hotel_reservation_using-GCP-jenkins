@@ -7,3 +7,5 @@ pyyaml
 imbalanced-learn
 lightgbm
 mlflow
+flask
+python-jenkins
