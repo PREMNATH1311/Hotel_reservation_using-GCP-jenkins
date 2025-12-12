@@ -23,16 +23,18 @@ pipeline {
         }
 
         stage('Setup Virtual Env & Install Dependencies') {
-            steps {
-                echo 'Setting up virtual environment'
-                sh '''
-                python -m venv ${VENV_DIR}
-                . ${VENV_DIR}/bin/activate
-                pip install --upgrade pip
-                pip install -e .
-                '''
-            }
-        }
+    steps {
+        sh '''
+        rm -rf venv
+        python3.10 -m venv venv
+        . venv/bin/activate
+        pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -e .
+        '''
+    }
+    }
+
 
         stage('Train Model') {
             steps {
