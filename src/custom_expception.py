@@ -11,7 +11,7 @@ class CustomException(Exception):
 
     @staticmethod
     def get_detailed_error_message(error_message: str) -> str:
-        exc_type, exc_value, exc_tb = sys.exc_info()
+        exc_type, exc_value, exc_tb = traceback.sys.exc_info()
 
         # In case exc_info() returns None (rare cases)
         if exc_tb is None:
