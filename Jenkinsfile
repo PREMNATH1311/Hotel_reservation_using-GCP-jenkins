@@ -21,26 +21,19 @@ pipeline {
             }
         }
 
-        stage('Train Model') {
-            steps {
-                echo 'Training the ML model...'
-                sh '''
-                python pipeline/training_pipeline.py
-                '''
-            }
-        }
-
         stage('Build & Push Docker Image') {
             steps {
                 withCredentials([file(credentialsId: 'gcp-key', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
                     sh '''
                     export PATH=$PATH:${GCLOUD_PATH}
-
                     gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
                     gcloud config set project ${GCP_PROJECT}
                     gcloud auth configure-docker --quiet
 
+                    # Build Docker image (training happens inside)
                     docker build --no-cache -t gcr.io/${GCP_PROJECT}/ml-project:latest .
+
+                    # Push to GCR
                     docker push gcr.io/${GCP_PROJECT}/ml-project:latest
                     '''
                 }
@@ -52,7 +45,6 @@ pipeline {
                 withCredentials([file(credentialsId: 'gcp-key', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
                     sh '''
                     export PATH=$PATH:${GCLOUD_PATH}
-
                     gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
                     gcloud config set project ${GCP_PROJECT}
 
@@ -66,6 +58,5 @@ pipeline {
                 }
             }
         }
-
     }
 }
