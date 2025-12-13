@@ -1,4 +1,4 @@
-pipeline{
+pipeline {
     agent any
 
     environment {
@@ -6,10 +6,10 @@ pipeline{
         GCLOUD_PATH = "/var/jenkins_home/google-cloud-sdk/bin"
     }
 
-    stages{
+    stages {
 
-        stage('Clone GitHub Repo'){
-            steps{
+        stage('Clone GitHub Repo') {
+            steps {
                 echo 'Cloning GitHub repo...'
                 checkout scmGit(
                     branches: [[name: '*/main']],
@@ -21,9 +21,18 @@ pipeline{
             }
         }
 
-        stage('Build & Push Docker Image'){
-            steps{
-                withCredentials([file(credentialsId: 'gcp-key', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]){
+        stage('Train Model') {
+            steps {
+                echo 'Training the ML model...'
+                sh '''
+                python pipeline/training_pipeline.py
+                '''
+            }
+        }
+
+        stage('Build & Push Docker Image') {
+            steps {
+                withCredentials([file(credentialsId: 'gcp-key', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
                     sh '''
                     export PATH=$PATH:${GCLOUD_PATH}
 
@@ -38,9 +47,9 @@ pipeline{
             }
         }
 
-        stage('Deploy to Cloud Run'){
-            steps{
-                withCredentials([file(credentialsId: 'gcp-key', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]){
+        stage('Deploy to Cloud Run') {
+            steps {
+                withCredentials([file(credentialsId: 'gcp-key', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
                     sh '''
                     export PATH=$PATH:${GCLOUD_PATH}
 
@@ -51,10 +60,12 @@ pipeline{
                         --image=gcr.io/${GCP_PROJECT}/ml-project:latest \
                         --platform=managed \
                         --region=us-central1 \
-                        --allow-unauthenticated
+                        --allow-unauthenticated \
+                        --set-env-vars CLOUD_RUN=true
                     '''
                 }
             }
         }
+
     }
 }

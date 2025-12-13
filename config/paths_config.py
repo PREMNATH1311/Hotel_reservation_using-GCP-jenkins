@@ -20,6 +20,13 @@ PROCESSED_TEST_FILE_PATH=os.path.join(PROCESSED_DIR,"processed_test.csv")
 
 ####### model training###
 
-MODEL_OUTPUT_PATH="artifacts/model/lgbm_model.pkl"
+LOCAL_MODEL_PATH = "artifacts/model/lgbm_model.pkl"
+GCS_MODEL_PATH = "gs://hotel-ml-models/lgbm_model.pkl"
+
+MODEL_OUTPUT_PATH = (
+    GCS_MODEL_PATH
+    if os.getenv("CLOUD_RUN") == "true"
+    else LOCAL_MODEL_PATH
+)
 
 

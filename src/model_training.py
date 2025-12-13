@@ -13,9 +13,21 @@ from scipy.stats import randint
 from sklearn.model_selection import train_test_split
 import mlflow
 import mlflow.sklearn
+from google.cloud import storage
 
 logger=get_logger(__name__)
 
+def upload_model_to_gcs(local_path, gcs_path):
+    """
+    Uploads a local model file to GCS
+    """
+    client = storage.Client()
+
+    bucket_name, blob_path = gcs_path.replace("gs://", "").split("/", 1)
+    bucket = client.bucket(bucket_name)
+    blob = bucket.blob(blob_path)
+
+    blob.upload_from_filename(local_path)
 
 class ModelTraining:
     def __init__(self,train_path,test_path,model_output_path):
@@ -121,22 +133,41 @@ class ModelTraining:
             logger.error(f"Error while evaluating model {e}")    
             raise CustomException("Failed to evaluate Model",e)
      
-     
-    def save_model(self,model):
+    
+    # def save_model(self,model):
+    #     try:
+    #         os.makedirs(os.path.dirname(self.model_output_path),exist_ok=True)
+            
+    #         logger.info("Saving the Model")
+            
+    #         joblib.dump(model,self.model_output_path)
+            
+    #         logger.info(f"Model saved to {self.model_output_path}")
+    
+    def save_model(self, model):
         try:
-            os.makedirs(os.path.dirname(self.model_output_path),exist_ok=True)
-            
-            logger.info("Saving the Model")
-            
-            joblib.dump(model,self.model_output_path)
-            
-            logger.info(f"Model saved to {self.model_output_path}")
-            
-            
+            os.makedirs(os.path.dirname(self.model_output_path), exist_ok=True)
+
+            logger.info("Saving model locally")
+            joblib.dump(model, self.model_output_path)
+
+            logger.info(f"Model saved at {self.model_output_path}")
+
+            # Upload to GCS
+            gcs_path = "gs://hotel-ml-models/lgbm_model.pkl"
+            upload_model_to_gcs(self.model_output_path, gcs_path)
+
+            logger.info(f"Model uploaded to GCS at {gcs_path}")
+
         except Exception as e:
-            logger.error(f"Error while saving model {e}")
-            raise CustomException("Failed to Save model",e)
-        
+            logger.error(f"Error while saving/uploading model {e}")
+            raise CustomException("Failed to save or upload model", e)
+
+                
+        except Exception as e:
+                logger.error(f"Error while saving model {e}")
+                raise CustomException("Failed to Save model",e)
+            
         
     def run(self):
         try:
